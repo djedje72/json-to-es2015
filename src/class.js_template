@@ -1,0 +1,5 @@
+$$imports$$export class $$ClassName$${
+    constructor() {
+        $$init$$Object.seal(this);
+    }
+}

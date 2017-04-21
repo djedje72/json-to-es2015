@@ -1,0 +1,19 @@
+{
+  "name": "json-to-es2015",
+  "version": "1.0.0",
+  "description": "convert json file to es2015 sealed classes",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "build": "babel src --presets babel-preset-env --out-dir dist",
+    "prepublish": "npm run build"
+  },
+  "author": "Rémi Fruteau de Laclos <remi.fruteau@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.4.0"
+  }
+}
