@@ -4,7 +4,7 @@ const chalk = require("chalk");
 const rimraf = require('rimraf');
 const override = true;
 
-const template = fs.readFileSync(`${__dirname}/class.js_template`, {"encoding": "utf-8"});
+const templateClass = fs.readFileSync(`${__dirname}/class.js_template`, {"encoding": "utf-8"});
 
 function isObject(elt) {
     return elt instanceof Object && !(elt instanceof Array);
@@ -14,10 +14,11 @@ function isArray(elt) {
 }
 
 const lineBreak = "\r\n";
+const toExport = [];
 
 function parseLevel(dir, name, level) {
     const upperName = name.charAt(0).toUpperCase() + name.slice(1);
-    let data = template.replace(/\$\$ClassName\$\$/g, upperName);
+    let classData = templateClass.replace(/\$\$ClassName\$\$/g, upperName);
     let imports = [];
     Object.keys(level).forEach((key) => {
         const upperKey = key.charAt(0).toUpperCase() + key.slice(1);
@@ -31,7 +32,7 @@ function parseLevel(dir, name, level) {
                 Object.assign(mergedValue, val);
             });
             parseLevel(dir, `${key}Value`, mergedValue);
-        } 
+        }
     });
     let importsStr = "";
     let initStr = "";
@@ -51,9 +52,27 @@ function parseLevel(dir, name, level) {
             importsStr += lineBreak;
         }
     }
-    data = data.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
+    classData = classData.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
     const filePath = `${dir}/${upperName}.js`;
-    fs.writeFile(filePath, data, {"flag": override ? "w" : "wx"}, (err) => { 
+    toExport.push(upperName);
+    fs.writeFile(filePath, classData, {"flag": override ? "w" : "wx"}, (err) => { 
+        if (err) {
+            console.log(err);
+            throw err;
+        }
+        console.log(chalk.green(`file [${chalk.cyan(filePath)}] -> created`));
+    });
+}
+
+function createIndex(dir) {
+    const templateIndex = fs.readFileSync(`${__dirname}/index.js_template`, {"encoding": "utf-8"});
+    let exportsStr = "";
+    toExport.forEach((exportName) => {
+        exportsStr += `export {${exportName}} from "./${exportName}";${lineBreak}`;
+    })
+    const indexData = templateIndex.replace("$$exports$$", exportsStr)
+    const filePath = `${dir}/index.js`;
+    fs.writeFile(filePath, indexData, {"flag": override ? "w" : "wx"}, (err) => { 
         if (err) {
             throw err;
         }
@@ -68,12 +87,14 @@ module.exports = (jsonPath) => {
         rimraf(dir, () => {
             console.log(chalk.green(`dir[${chalk.cyan(dir)}] removed.`));
             fs.mkdir(dir, (err) => {
+                console.log(err);
                 console.log(chalk.green(`dir[${chalk.cyan(dir)}] created.`));
                 fs.readFile(jsonPath, "utf8", (err, data) => {
                     if (err) {
                         throw err;
                     } else {
                         parseLevel(dir, pathInfo.name, JSON.parse(data));
+                        createIndex(dir);
                     }
                 });
             });
