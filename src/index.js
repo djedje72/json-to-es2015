@@ -13,6 +13,8 @@ function isArray(elt) {
     return elt instanceof Array;
 }
 
+const lineBreak = "\r\n";
+
 function parseLevel(dir, name, level) {
     const upperName = name.charAt(0).toUpperCase() + name.slice(1);
     let data = template.replace(/\$\$ClassName\$\$/g, upperName);
@@ -39,14 +41,14 @@ function parseLevel(dir, name, level) {
             const upperKey = key.charAt(0).toUpperCase() + key.slice(1);
             if (isObject(value)) {
                 addLineBreak = true;
-                importsStr += `${importStr}\n`;
-                initStr += `this.${key} = new ${upperKey}();\n        `;
+                importsStr += `${importStr}${lineBreak}`;
+                initStr += `this.${key} = new ${upperKey}();${lineBreak}        `;
             } else {
-                initStr += `this.${key} = ${isArray(value) ? "[]" : "undefined"};\n        `;
+                initStr += `this.${key} = ${isArray(value) ? "[]" : "undefined"};${lineBreak}        `;
             }
         });
         if (addLineBreak) {
-            importsStr += "\n";
+            importsStr += lineBreak;
         }
     }
     data = data.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
