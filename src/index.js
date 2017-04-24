@@ -1,24 +1,7 @@
-const test = {
-    "prop1": "124",
-    "prop2": {
-        "prop3": true,
-        "prop4": undefined,
-        "prop5": null,
-        "prop6": [{
-            "prop7": null
-        }]
-    }
-};
-
 const fs = require("fs");
-
-const dir = `${__dirname}/out-test`;
-try {
-    fs.mkdirSync(dir);
-} catch(e) {
-
-}
-
+const path = require("path");
+const chalk = require("chalk");
+const rimraf = require('rimraf');
 const override = true;
 
 const template = fs.readFileSync(`${__dirname}/class.js_template`, {"encoding": "utf-8"});
@@ -30,21 +13,22 @@ function isArray(elt) {
     return elt instanceof Array;
 }
 
-function parseLevel(name, level) {
-    let data = template.replace(/\$\$ClassName\$\$/g, name.charAt(0).toUpperCase() + name.slice(1));
+function parseLevel(dir, name, level) {
+    const upperName = name.charAt(0).toUpperCase() + name.slice(1);
+    let data = template.replace(/\$\$ClassName\$\$/g, upperName);
     let imports = [];
     Object.keys(level).forEach((key) => {
         const upperKey = key.charAt(0).toUpperCase() + key.slice(1);
         const value = level[key];
         imports.push([key, value, `import {${upperKey}} from "./${upperKey}";`]);
         if (isObject(value)) {
-            parseLevel(key, value);
+            parseLevel(dir, key, value);
         } else if (isArray(value) && value.length > 0) {
             const mergedValue = {};
             value.forEach((val) => {
                 Object.assign(mergedValue, val);
             });
-            parseLevel(`${key}Value`, mergedValue);
+            parseLevel(dir, `${key}Value`, mergedValue);
         } 
     });
     let importsStr = "";
@@ -66,7 +50,31 @@ function parseLevel(name, level) {
         }
     }
     data = data.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
-    fs.writeFile(`${dir}/${name}.js`, data, {"flag": override ? "w" : "wx"}, (err) => { });
+    const filePath = `${dir}/${upperName}.js`;
+    fs.writeFile(filePath, data, {"flag": override ? "w" : "wx"}, (err) => { 
+        if (err) {
+            throw err;
+        }
+        console.log(chalk.green(`file [${chalk.cyan(filePath)}] -> created`));
+    });
 }
 
-parseLevel("test", test)
+module.exports = (jsonPath) => {
+    const pathInfo = path.parse(jsonPath);
+    if (pathInfo.ext === ".json") {
+        const dir = `${pathInfo.dir}/${pathInfo.name}`;
+        rimraf(dir, () => {
+            console.log(chalk.green(`dir[${chalk.cyan(dir)}] removed.`));
+            fs.mkdir(dir, (err) => {
+                console.log(chalk.green(`dir[${chalk.cyan(dir)}] created.`));
+                fs.readFile(jsonPath, "utf8", (err, data) => {
+                    if (err) {
+                        throw err;
+                    } else {
+                        parseLevel(dir, pathInfo.name, JSON.parse(data));
+                    }
+                });
+            });
+        });
+    }
+};

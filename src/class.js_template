@@ -1,4 +1,6 @@
-$$imports$$export class $$ClassName$${
+//This is a generated-file, do not modify.
+
+$$imports$$export class $$ClassName$$ {
     constructor() {
         $$init$$Object.seal(this);
     }

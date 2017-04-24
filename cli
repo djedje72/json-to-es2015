@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+const program = require("commander");
+const packageJson = require("./package.json");
+const path = require("path");
+const generateClasses = require("./src/index");
+
+program
+    .version(packageJson.version)
+    .arguments("[jsonPath]")
+    .action((jsonPath) => {
+        generateClasses(path.resolve(jsonPath));
+    })
+    .parse(process.argv);
