@@ -1,6 +1,6 @@
 {
   "name": "json-to-es2015",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "bin": {
     "json-to-es2015": "./cli"
   },
