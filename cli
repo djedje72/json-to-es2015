@@ -2,7 +2,7 @@
 const program = require("commander");
 const packageJson = require("./package.json");
 const path = require("path");
-const generateClasses = require("./src/index");
+const generateClasses = require("./src/index.js");
 
 program
     .version(packageJson.version)
