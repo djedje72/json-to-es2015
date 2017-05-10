@@ -3,8 +3,9 @@ const path = require("path");
 const chalk = require("chalk");
 const rimraf = require('rimraf');
 const override = true;
+const templatesPath = `${__dirname}/../templates`;
 
-const templateClass = fs.readFileSync(`${__dirname}/class.js_template`, {"encoding": "utf-8"});
+const templateClass = fs.readFileSync(`${templatesPath}/class.js_template`, {"encoding": "utf-8"});
 
 function isObject(elt) {
     return elt instanceof Object && !(elt instanceof Array);
@@ -65,7 +66,7 @@ function parseLevel(dir, name, level) {
 }
 
 function createIndex(dir) {
-    const templateIndex = fs.readFileSync(`${__dirname}/index.js_template`, {"encoding": "utf-8"});
+    const templateIndex = fs.readFileSync(`${templatesPath}/index.js_template`, {"encoding": "utf-8"});
     let exportsStr = "";
     toExport.forEach((exportName) => {
         exportsStr += `export {${exportName}} from "./${exportName}";${lineBreak}`;
