@@ -15,7 +15,7 @@ function isArray(elt) {
 }
 
 const lineBreak = "\r\n";
-const toExport = [];
+const toExport = new Set();
 
 function parseLevel(dir, name, level) {
     const upperName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -55,7 +55,7 @@ function parseLevel(dir, name, level) {
     }
     classData = classData.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
     const filePath = `${dir}/${upperName}.js`;
-    toExport.push(upperName);
+    toExport.add(upperName);
     fs.writeFile(filePath, classData, {"flag": override ? "w" : "wx"}, (err) => { 
         if (err) {
             console.log(err);
