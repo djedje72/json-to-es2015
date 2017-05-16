@@ -110,3 +110,11 @@ Then add a script entry in your package json and use it.
     "generate:example": "json-to-es2015 ./path-to-your-example.json"
 }
 ```
+
+## Options
+You can change default "undefined" value with -d or --default
+
+```
+json-to-es2015 ./example.json -d null
+json-to-es2015 ./example.json -default null
+```

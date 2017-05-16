@@ -16,6 +16,7 @@ function isArray(elt) {
 
 const lineBreak = "\r\n";
 const toExport = new Set();
+let defaultValueToUse = undefined;
 
 function parseLevel(dir, name, level) {
     const upperName = name.charAt(0).toUpperCase() + name.slice(1);
@@ -46,7 +47,7 @@ function parseLevel(dir, name, level) {
                 importsStr += `${importStr}${lineBreak}`;
                 initStr += `this.${key} = new ${upperKey}();${lineBreak}        `;
             } else {
-                initStr += `this.${key} = ${isArray(value) ? "[]" : "undefined"};${lineBreak}        `;
+                initStr += `this.${key} = ${isArray(value) ? "[]" : `${defaultValueToUse}`};${lineBreak}        `;
             }
         });
         if (addLineBreak) {
@@ -81,7 +82,8 @@ function createIndex(dir) {
     });
 }
 
-module.exports = (jsonPath) => {
+module.exports = (jsonPath, defaultValue) => {
+    defaultValueToUse = defaultValue;
     const pathInfo = path.parse(jsonPath);
     if (pathInfo.ext === ".json") {
         const dir = `${pathInfo.dir}/${pathInfo.name}`;
