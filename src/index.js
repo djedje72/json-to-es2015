@@ -31,13 +31,18 @@ function parseLevel(dir, name, level) {
         } else if (isArray(value) && value.length > 0) {
             const mergedValue = {};
             value.forEach((val) => {
-                Object.assign(mergedValue, val);
+                console.log(val);
+                if(isObject(val)) {
+                    Object.assign(mergedValue, val);
+                }
             });
             parseLevel(dir, `${key}Value`, mergedValue);
         }
     });
+    let initLetStr = "";
     let importsStr = "";
-    let initStr = "";
+    let constructorStr = "";
+    let classFunctionStr = "";
     if (imports.length > 0) {
         let addLineBreak = false;
         imports.forEach(([key, value, importStr]) => {
@@ -45,16 +50,28 @@ function parseLevel(dir, name, level) {
             if (isObject(value)) {
                 addLineBreak = true;
                 importsStr += `${importStr}${lineBreak}`;
-                initStr += `this.${key} = new ${upperKey}();${lineBreak}        `;
+                constructorStr += `this.${key} = new ${upperKey}();${lineBreak}        `;
             } else {
-                initStr += `this.${key} = ${isArray(value) ? "[]" : `${defaultValueToUse}`};${lineBreak}        `;
+                if (isArray(value)) {
+                    constructorStr += `this.${key} = [];${lineBreak}        `;
+                } else {
+                    const {getter, setter} = generateGetterSetter(key, value);
+                    initLetStr += initLetStr === "" ? `let _${key}` : `, _${key}`;
+                    classFunctionStr += `${lineBreak}`;
+                    classFunctionStr += `    ${getter}${lineBreak}`;
+                    classFunctionStr += `    ${setter}${lineBreak}`;
+                }
             }
         });
         if (addLineBreak) {
             importsStr += lineBreak;
         }
     }
-    classData = classData.replace("$$imports$$", importsStr).replace("$$init$$", initStr);
+    classData = classData
+        .replace("$$imports$$", importsStr)
+        .replace("$$constructor$$", constructorStr)
+        .replace("$$classFunction$$", classFunctionStr)
+        .replace("$$initLet$$", initLetStr);
     const filePath = `${dir}/${upperName}.js`;
     toExport.add(upperName);
     fs.writeFile(filePath, classData, {"flag": override ? "w" : "wx"}, (err) => { 
@@ -64,6 +81,31 @@ function parseLevel(dir, name, level) {
         }
         console.log(chalk.green(`file [${chalk.cyan(filePath)}] -> created`));
     });
+}
+
+function generateGetterSetter(key, value) {
+    const getter = `get ${key}() {
+        return _${key} || ${defaultValueToUse};
+    }`;
+    const setter = `set ${key}(value) {
+        _${key} = ${getParser(value)()};
+    }`;
+    return {getter, setter};
+}
+
+function getParser(value) {
+    switch(value) {
+        case "string":
+            return () => `String(value)`
+        case "integer":
+            return () => `Number.parseInt(value)`
+        case "number":
+            return () => `Number.parseFloat(value)`
+        case "boolean":
+            return () => `value === "true" || value === true`
+        default :
+            return () => `value`
+    }
 }
 
 function createIndex(dir) {
