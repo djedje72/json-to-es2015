@@ -1,0 +1,3 @@
+set $$key$$(value) {
+        _$$key$$ = $$value$$;
+    }

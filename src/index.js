@@ -6,6 +6,8 @@ const override = true;
 const templatesPath = `${__dirname}/../templates`;
 
 const templateClass = fs.readFileSync(`${templatesPath}/class.js_template`, {"encoding": "utf-8"});
+const templateGet = fs.readFileSync(`${templatesPath}/get.js_template`, {"encoding": "utf-8"});
+const templateSet = fs.readFileSync(`${templatesPath}/set.js_template`, {"encoding": "utf-8"});
 
 function isObject(elt) {
     return elt instanceof Object && !(elt instanceof Array);
@@ -86,12 +88,20 @@ function parseLevel(dir, name, level) {
 }
 
 function generateGetterSetter(key, value) {
-    const getter = `get ${key}() {
-        return _${key} || ${defaultValueToUse};
-    }`;
-    const setter = `set ${key}(value) {
-        _${key} = ${getParser(value)()};
-    }`;
+    // const getter = `get ${key}() {
+    //     return _${key} || ${defaultValueToUse};
+    // }`;
+    // const setter = `set ${key}(value) {
+    //     _${key} = ${getParser(value)()};
+    // }`;
+    const getter = templateGet
+        .replace(/\$\$key\$\$/g, key)
+        .replace(/\$\$defaultValue\$\$/g, defaultValueToUse)
+        .replace(/\$\$value\$\$/g, getParser(value)());
+
+    const setter = templateSet
+        .replace(/\$\$key\$\$/g, key)
+        .replace(/\$\$value\$\$/g, getParser(value)());
     return {getter, setter};
 }
 
