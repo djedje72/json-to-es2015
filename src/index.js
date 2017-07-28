@@ -31,7 +31,6 @@ function parseLevel(dir, name, level) {
         } else if (isArray(value) && value.length > 0) {
             const mergedValue = {};
             value.forEach((val) => {
-                console.log(val);
                 if(isObject(val)) {
                     Object.assign(mergedValue, val);
                 }
@@ -40,6 +39,7 @@ function parseLevel(dir, name, level) {
         }
     });
     let initLetStr = "";
+    let toJSONStr = `...this`;
     let importsStr = "";
     let constructorStr = "";
     let classFunctionStr = "";
@@ -57,6 +57,7 @@ function parseLevel(dir, name, level) {
                 } else {
                     const {getter, setter} = generateGetterSetter(key, value);
                     initLetStr += initLetStr === "" ? `let _${key}` : `, _${key}`;
+                    toJSONStr += `,${lineBreak}            "${key}": this.${key}`;
                     classFunctionStr += `${lineBreak}`;
                     classFunctionStr += `    ${getter}${lineBreak}`;
                     classFunctionStr += `    ${setter}${lineBreak}`;
@@ -71,7 +72,8 @@ function parseLevel(dir, name, level) {
         .replace("$$imports$$", importsStr)
         .replace("$$constructor$$", constructorStr)
         .replace("$$classFunction$$", classFunctionStr)
-        .replace("$$initLet$$", initLetStr);
+        .replace("$$toJSON$$", toJSONStr)
+        .replace("$$initLet$$", initLetStr !== "" ? `${initLetStr};`: "");
     const filePath = `${dir}/${upperName}.js`;
     toExport.add(upperName);
     fs.writeFile(filePath, classData, {"flag": override ? "w" : "wx"}, (err) => { 
@@ -96,11 +98,11 @@ function generateGetterSetter(key, value) {
 function getParser(value) {
     switch(value) {
         case "string":
-            return () => `String(value)`
+            return () => `value && String(value)`
         case "integer":
-            return () => `Number.parseInt(value)`
+            return () => `value && Number.parseInt(value)`
         case "number":
-            return () => `Number.parseFloat(value)`
+            return () => `value && Number.parseFloat(value)`
         case "boolean":
             return () => `value === "true" || value === true`
         default :

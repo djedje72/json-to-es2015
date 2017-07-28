@@ -1,8 +1,13 @@
 //[json-to-es2015] - This is a generated-file, do not modify.
-
-$$initLet$$;
+$$initLet$$
 $$imports$$export class $$ClassName$$ {
     constructor() {
         $$constructor$$Object.seal(this);
     }
-$$classFunction$$}
+$$classFunction$$
+    toJSON() {
+        return {
+            $$toJSON$$
+        };
+    }
+}
