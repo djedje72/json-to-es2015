@@ -88,12 +88,6 @@ function parseLevel(dir, name, level) {
 }
 
 function generateGetterSetter(key, value) {
-    // const getter = `get ${key}() {
-    //     return _${key} || ${defaultValueToUse};
-    // }`;
-    // const setter = `set ${key}(value) {
-    //     _${key} = ${getParser(value)()};
-    // }`;
     const getter = templateGet
         .replace(/\$\$key\$\$/g, key)
         .replace(/\$\$defaultValue\$\$/g, defaultValueToUse)
