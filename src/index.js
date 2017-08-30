@@ -94,16 +94,15 @@ function parseLevel(dir, name, level) {
 function generateGetterSetter(key, value) {
     const getter = templateGet
         .replace(/\$\$key\$\$/g, key)
-        .replace(/\$\$defaultValue\$\$/g, defaultValueToUse)
-        .replace(/\$\$value\$\$/g, getParser(value)());
+        .replace(/\$\$defaultValue\$\$/g, defaultValueToUse);
 
     const setter = templateSet
         .replace(/\$\$key\$\$/g, key)
-        .replace(/\$\$value\$\$/g, getParser(value)());
+        .replace(/\$\$value\$\$/g, getSetterParser(value)());
     return {getter, setter};
 }
 
-function getParser(value) {
+function getSetterParser(value) {
     switch(value) {
         case "string":
             return () => `_value && String(_value)`
