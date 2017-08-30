@@ -40,11 +40,11 @@ function parseLevel(dir, name, level) {
             parseLevel(dir, `${key}Value`, mergedValue);
         }
     });
-    let initLetStr = "";
-    let toJSONStr = `...this`;
+    let fieldsStr = "";
     let importsStr = "";
     let constructorStr = "";
     let classFunctionStr = "";
+    let symbolStr = "";
     if (imports.length > 0) {
         let addLineBreak = false;
         imports.forEach(([key, value, importStr]) => {
@@ -57,14 +57,15 @@ function parseLevel(dir, name, level) {
                 if (isArray(value)) {
                     constructorStr += `this.${key} = [];${lineBreak}        `;
                 } else {
+                    constructorStr += `this[${key}] = null;${lineBreak}        `;
+                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
                     const {getter, setter} = generateGetterSetter(key, value);
-                    initLetStr += initLetStr === "" ? `let _${key}` : `, _${key}`;
-                    toJSONStr += `,${lineBreak}            "${key}": this.${key}`;
                     classFunctionStr += `${lineBreak}`;
                     classFunctionStr += `    ${getter}${lineBreak}`;
                     classFunctionStr += `    ${setter}${lineBreak}`;
                 }
             }
+            fieldsStr += fieldsStr === "" ? `${key}` : `, ${key}`;
         });
         if (addLineBreak) {
             importsStr += lineBreak;
@@ -74,8 +75,11 @@ function parseLevel(dir, name, level) {
         .replace("$$imports$$", importsStr)
         .replace("$$constructor$$", constructorStr)
         .replace("$$classFunction$$", classFunctionStr)
-        .replace("$$toJSON$$", toJSONStr)
-        .replace("$$initLet$$", initLetStr !== "" ? `${initLetStr};`: "");
+        .replace("$$fieldsDestructuring$$", fieldsStr !== "" ? `const {${fieldsStr}} = this;`: "")
+        .replace("$$fields$$", fieldsStr)
+        .replace("$$symbols$$", symbolStr)
+        .replace(/^\s*$[\n\r]{1,}/gm, "");
+        
     const filePath = `${dir}/${upperName}.js`;
     toExport.add(upperName);
     fs.writeFile(filePath, classData, {"flag": override ? "w" : "wx"}, (err) => { 
@@ -102,15 +106,15 @@ function generateGetterSetter(key, value) {
 function getParser(value) {
     switch(value) {
         case "string":
-            return () => `value && String(value)`
+            return () => `_value && String(_value)`
         case "integer":
-            return () => `value && Number.parseInt(value)`
+            return () => `_value && Number.parseInt(_value)`
         case "number":
-            return () => `value && Number.parseFloat(value)`
+            return () => `_value && Number.parseFloat(_value)`
         case "boolean":
-            return () => `value === "true" || value === true`
+            return () => `_value === "true" || _value === true`
         default :
-            return () => `value`
+            return () => `_value`
     }
 }
 
