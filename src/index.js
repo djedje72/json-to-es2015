@@ -78,7 +78,7 @@ function parseLevel(dir, name, level) {
         .replace("$$fieldsDestructuring$$", fieldsStr !== "" ? `const {${fieldsStr}} = this;`: "")
         .replace("$$fields$$", fieldsStr)
         .replace("$$symbols$$", symbolStr)
-        .replace(/^\s*$[\n\r]{1,}/gm, "");
+        .replace(/^\s*$[\r\n]{1,}/gm, "\n");
         
     const filePath = `${dir}/${upperName}.js`;
     toExport.add(upperName);
