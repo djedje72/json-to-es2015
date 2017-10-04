@@ -8,6 +8,7 @@ const templatesPath = `${__dirname}/../templates`;
 const templateClass = fs.readFileSync(`${templatesPath}/class.js_template`, {"encoding": "utf-8"});
 const templateGet = fs.readFileSync(`${templatesPath}/get.js_template`, {"encoding": "utf-8"});
 const templateSet = fs.readFileSync(`${templatesPath}/set.js_template`, {"encoding": "utf-8"});
+const templateArrayGetSet = fs.readFileSync(`${templatesPath}/arrayGetSet.js_template`, {"encoding": "utf-8"});
 
 function isObject(elt) {
     return elt instanceof Object && !(elt instanceof Array);
@@ -20,14 +21,18 @@ const lineBreak = "\r\n";
 const toExport = new Set();
 let defaultValueToUse = undefined;
 
+function upperFirst(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 function parseLevel(dir, name, level) {
-    const upperName = name.charAt(0).toUpperCase() + name.slice(1);
+    const upperName = upperFirst(name);
     let classData = templateClass.replace(/\$\$ClassName\$\$/g, upperName);
     let imports = [];
     Object.keys(level).forEach((key) => {
-        const upperKey = key.charAt(0).toUpperCase() + key.slice(1);
+        const upperKey = upperFirst(key);
         const value = level[key];
-        imports.push([key, value, `import {${upperKey}} from "./${upperKey}";`]);
+        imports.push([key, value]);
         if (isObject(value)) {
             parseLevel(dir, key, value);
         } else if (isArray(value) && value.length > 0) {
@@ -47,15 +52,21 @@ function parseLevel(dir, name, level) {
     let symbolStr = "";
     if (imports.length > 0) {
         let addLineBreak = false;
-        imports.forEach(([key, value, importStr]) => {
-            const upperKey = key.charAt(0).toUpperCase() + key.slice(1);
+        imports.forEach(([key, value]) => {
+            const upperKey = upperFirst(key);
             if (isObject(value)) {
                 addLineBreak = true;
-                importsStr += `${importStr}${lineBreak}`;
+                importsStr += `import {${upperKey}} from "./${upperKey}";${lineBreak}`;
                 constructorStr += `this.${key} = new ${upperKey}();${lineBreak}        `;
             } else {
                 if (isArray(value)) {
-                    constructorStr += `this.${key} = [];${lineBreak}        `;
+                    importsStr += `import {${upperKey}Value} from "./${upperKey}Value";${lineBreak}`;
+                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
+                    constructorStr += `this[${key}] = [];${lineBreak}        `;
+                    const arrayGetSetStr = templateArrayGetSet
+                        .replace(/\$\$key\$\$/g, key)
+                        .replace(/\$\$upperKey\$\$/g, upperKey);
+                    classFunctionStr += `    ${arrayGetSetStr}${lineBreak}`;
                 } else {
                     constructorStr += `this[${key}] = null;${lineBreak}        `;
                     symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
@@ -103,7 +114,7 @@ function generateGetterSetter(key, value) {
 }
 
 function getSetterParser(value) {
-    switch(value) {
+    switch(value && value.toLowerCase()) {
         case "string":
             return () => `_value && String(_value)`
         case "integer":
