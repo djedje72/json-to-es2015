@@ -1,0 +1,14 @@
+//[json-to-es2015] - This is a generated-file, do not modify.
+$$imports$$
+$$symbols$$
+export class $$ClassName$$ {
+    constructor() {
+        $$constructor$$
+        Object.seal(this);
+    }
+$$classFunction$$
+    toJSON() {
+        $$fieldsDestructuring$$
+        return {$$fields$$};
+    }
+}

@@ -1,0 +1,4 @@
+get $$key$$() {
+        const _value = this[$$key$$];
+        return (_value !== undefined && _value !== null) ? _value : $$defaultValue$$;
+    }

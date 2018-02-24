@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+const program = require("commander");
+const packageJson = require("./package.json");
+const path = require("path");
+const generateClasses = require("./dist/index");
+
+program
+    .version(packageJson.version)
+    .arguments("[jsonPath]")
+    .option("-d, --default [default]", "Override default undefined value")
+    .action((jsonPath, options) => {
+        generateClasses(path.resolve(jsonPath), options.default);
+    })
+    .parse(process.argv);

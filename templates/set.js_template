@@ -1,0 +1,3 @@
+set $$key$$(_value) {
+        this[$$key$$] = $$value$$;
+    }
