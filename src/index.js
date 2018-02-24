@@ -28,14 +28,16 @@ function upperFirst(str) {
 function parseLevel(dir, name, level) {
     const upperName = upperFirst(name);
     let classData = templateClass.replace(/\$\$ClassName\$\$/g, upperName);
-    let imports = [];
+    let imports = new Map();
+    let useLodash = false;
     Object.keys(level).forEach((key) => {
         const upperKey = upperFirst(key);
         const value = level[key];
-        imports.push([key, value]);
+        imports.set(key, value);
         if (isObject(value)) {
             parseLevel(dir, key, value);
         } else if (isArray(value) && value.length > 0) {
+            useLodash = true;
             const mergedValue = {};
             value.forEach((val) => {
                 if(isObject(val)) {
@@ -50,9 +52,12 @@ function parseLevel(dir, name, level) {
     let constructorStr = "";
     let classFunctionStr = "";
     let symbolStr = "";
-    if (imports.length > 0) {
+    if (imports.size > 0) {
+        if (useLodash) {
+            importsStr += `import _ from "lodash";${lineBreak}`;
+        }
         let addLineBreak = false;
-        imports.forEach(([key, value]) => {
+        for (const [key, value] of imports) {
             const upperKey = upperFirst(key);
             if (isObject(value)) {
                 addLineBreak = true;
@@ -77,7 +82,7 @@ function parseLevel(dir, name, level) {
                 }
             }
             fieldsStr += fieldsStr === "" ? `${key}` : `, ${key}`;
-        });
+        };
         if (addLineBreak) {
             importsStr += lineBreak;
         }
@@ -133,7 +138,7 @@ function createIndex(dir) {
     let exportsStr = "";
     toExport.forEach((exportName) => {
         exportsStr += `export {${exportName}} from "./${exportName}";${lineBreak}`;
-    })
+    });
     const indexData = templateIndex.replace("$$exports$$", exportsStr)
     const filePath = `${dir}/index.js`;
     fs.writeFile(filePath, indexData, {"flag": override ? "w" : "wx"}, (err) => { 
