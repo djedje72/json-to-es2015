@@ -29,7 +29,6 @@ function parseLevel(dir, name, level) {
     const upperName = upperFirst(name);
     let classData = templateClass.replace(/\$\$ClassName\$\$/g, upperName);
     let imports = new Map();
-    let useLodash = false;
     Object.keys(level).forEach((key) => {
         const upperKey = upperFirst(key);
         const value = level[key];
@@ -37,7 +36,6 @@ function parseLevel(dir, name, level) {
         if (isObject(value)) {
             parseLevel(dir, key, value);
         } else if (isArray(value) && value.length > 0) {
-            useLodash = true;
             const mergedValue = {};
             value.forEach((val) => {
                 if(isObject(val)) {
@@ -53,9 +51,6 @@ function parseLevel(dir, name, level) {
     let classFunctionStr = "";
     let symbolStr = "";
     if (imports.size > 0) {
-        if (useLodash) {
-            importsStr += `import _ from "lodash";${lineBreak}`;
-        }
         let addLineBreak = false;
         for (const [key, value] of imports) {
             const upperKey = upperFirst(key);
