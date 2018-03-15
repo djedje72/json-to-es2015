@@ -1,4 +1,4 @@
 get $$key$$() {
-        const _value = this[$$key$$];
+        const _value = this.$$privateSuffix$$$$key$$;
         return (_value !== undefined && _value !== null) ? _value : $$defaultValue$$;
     }

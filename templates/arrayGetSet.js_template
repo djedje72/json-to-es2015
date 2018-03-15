@@ -1,8 +1,8 @@
 get $$key$$() {
-        return this[$$key$$];
+        return this.$$privateSuffix$$$$key$$;
     }
     set $$key$$(_values) {
-        this[$$key$$] = _values instanceof Array ? _values.map(
-            (_value) => ((_value && _value instanceof Object) ? Object.assign(new $$upperKey$$Value(), _value) : _value)
+        this.$$privateSuffix$$$$key$$ = _values instanceof Array ? _values.map(
+            (_value) => ((_value && _value instanceof Object) ? _.merge(new $$upperKey$$Value(), _value) : _value)
         ) : [];
     }

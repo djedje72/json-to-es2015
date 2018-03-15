@@ -20,15 +20,19 @@ function isArray(elt) {
 const lineBreak = "\r\n";
 const toExport = new Set();
 let defaultValueToUse = undefined;
+let privateSuffixToUse = undefined;
 
 function upperFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+const getPrivateSuffixToUse = () => privateSuffixToUse || "_";
+
 function parseLevel(dir, name, level) {
     const upperName = upperFirst(name);
     let classData = templateClass.replace(/\$\$ClassName\$\$/g, upperName);
     let imports = new Map();
+    let useLodash = false;
     Object.keys(level).forEach((key) => {
         const upperKey = upperFirst(key);
         const value = level[key];
@@ -36,6 +40,7 @@ function parseLevel(dir, name, level) {
         if (isObject(value)) {
             parseLevel(dir, key, value);
         } else if (isArray(value) && value.length > 0) {
+            useLodash = true;
             const mergedValue = {};
             value.forEach((val) => {
                 if(isObject(val)) {
@@ -45,12 +50,14 @@ function parseLevel(dir, name, level) {
             parseLevel(dir, `${key}Value`, mergedValue);
         }
     });
-    let fieldsStr = "";
+    const fields = [];
     let importsStr = "";
     let constructorStr = "";
     let classFunctionStr = "";
-    let symbolStr = "";
     if (imports.size > 0) {
+        if (useLodash) {
+            importsStr += `import _ from "lodash";${lineBreak}`;
+        }
         let addLineBreak = false;
         for (const [key, value] of imports) {
             const upperKey = upperFirst(key);
@@ -61,34 +68,33 @@ function parseLevel(dir, name, level) {
             } else {
                 if (isArray(value)) {
                     importsStr += `import {${upperKey}Value} from "./${upperKey}Value";${lineBreak}`;
-                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
-                    constructorStr += `this[${key}] = [];${lineBreak}        `;
+                    constructorStr += `this.${getPrivateSuffixToUse()}${key} = [];${lineBreak}        `;
                     const arrayGetSetStr = templateArrayGetSet
+                        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
                         .replace(/\$\$key\$\$/g, key)
                         .replace(/\$\$upperKey\$\$/g, upperKey);
                     classFunctionStr += `    ${arrayGetSetStr}${lineBreak}`;
                 } else {
-                    constructorStr += `this[${key}] = null;${lineBreak}        `;
-                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
+                    constructorStr += `this.${getPrivateSuffixToUse()}${key} = null;${lineBreak}        `;
                     const {getter, setter} = generateGetterSetter(key, value);
                     classFunctionStr += `${lineBreak}`;
                     classFunctionStr += `    ${getter}${lineBreak}`;
                     classFunctionStr += `    ${setter}${lineBreak}`;
                 }
             }
-            fieldsStr += fieldsStr === "" ? `${key}` : `, ${key}`;
+            fields.push(key);
         };
         if (addLineBreak) {
             importsStr += lineBreak;
         }
     }
+    const fieldsStr = fields.join(", ");
     classData = classData
         .replace("$$imports$$", importsStr)
         .replace("$$constructor$$", constructorStr)
         .replace("$$classFunction$$", classFunctionStr)
         .replace("$$fieldsDestructuring$$", fieldsStr !== "" ? `const {${fieldsStr}} = this;`: "")
         .replace("$$fields$$", fieldsStr)
-        .replace("$$symbols$$", symbolStr)
         .replace(/^\s*$[\r\n]{1,}/gm, "\n");
         
     const filePath = `${dir}/${upperName}.js`;
@@ -104,10 +110,12 @@ function parseLevel(dir, name, level) {
 
 function generateGetterSetter(key, value) {
     const getter = templateGet
+        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
         .replace(/\$\$key\$\$/g, key)
         .replace(/\$\$defaultValue\$\$/g, defaultValueToUse);
 
     const setter = templateSet
+        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
         .replace(/\$\$key\$\$/g, key)
         .replace(/\$\$value\$\$/g, getSetterParser(value)());
     return {getter, setter};
@@ -144,8 +152,9 @@ function createIndex(dir) {
     });
 }
 
-module.exports = (jsonPath, defaultValue) => {
+module.exports = (jsonPath, {defaultValue, privateSuffix}) => {
     defaultValueToUse = defaultValue;
+    privateSuffixToUse = privateSuffix;
     const pathInfo = path.parse(jsonPath);
     if (pathInfo.ext === ".json") {
         const dir = `${pathInfo.dir}/${pathInfo.name}`;
