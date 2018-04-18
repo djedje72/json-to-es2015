@@ -126,9 +126,9 @@ function getSetterParser(value) {
         case "string":
             return () => `_value && String(_value)`
         case "integer":
-            return () => `_value && Number.parseInt(_value)`
+            return () => `_.isFinite(_value) ? Number.parseInt(_value) : null`
         case "number":
-            return () => `_value && Number.parseFloat(_value)`
+            return () => `_.isFinite(_value) ? Number.parseFloat(_value) : null`
         case "boolean":
             return () => `_value === "true" || _value === true`
         default :
