@@ -130,7 +130,7 @@ function getSetterParser(value) {
         case "number":
             return () => `_.isFinite(Number.parseFloat(_value)) ? Number.parseFloat(_value) : null`
         case "boolean":
-            return () => `_value === "true" || _value === true`
+            return () => `_.isNil(_value) ? _value : (_value === "true" || _value === true)`
         default :
             return () => `_value`
     }
