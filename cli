@@ -7,8 +7,9 @@ const generateClasses = require("./dist/index");
 program
     .version(packageJson.version)
     .arguments("[jsonPath]")
-    .option("-d, --default [default]", "Override default undefined value")
+    .option("-d, --default [defaultValue]", "Override default undefined value")
+    .option("--private [privateSuffix]", "Override default undefined value")
     .action((jsonPath, options) => {
-        generateClasses(path.resolve(jsonPath), options.default);
+        generateClasses(path.resolve(jsonPath), options);
     })
     .parse(process.argv);

@@ -20,10 +20,13 @@ function isArray(elt) {
 const lineBreak = "\r\n";
 const toExport = new Set();
 let defaultValueToUse = undefined;
+let privateSuffixToUse = undefined;
 
 function upperFirst(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+const getPrivateSuffixToUse = () => privateSuffixToUse || "_";
 
 function parseLevel(dir, name, level) {
     const upperName = upperFirst(name);
@@ -47,11 +50,10 @@ function parseLevel(dir, name, level) {
             parseLevel(dir, `${key}Value`, mergedValue);
         }
     });
-    let fieldsStr = "";
+    const fields = [];
     let importsStr = "";
     let constructorStr = "";
     let classFunctionStr = "";
-    let symbolStr = "";
     if (imports.size > 0) {
         if (useLodash) {
             importsStr += `import _ from "lodash";${lineBreak}`;
@@ -66,34 +68,33 @@ function parseLevel(dir, name, level) {
             } else {
                 if (isArray(value)) {
                     importsStr += `import {${upperKey}Value} from "./${upperKey}Value";${lineBreak}`;
-                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
-                    constructorStr += `this[${key}] = [];${lineBreak}        `;
+                    constructorStr += `this.${getPrivateSuffixToUse()}${key} = [];${lineBreak}        `;
                     const arrayGetSetStr = templateArrayGetSet
+                        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
                         .replace(/\$\$key\$\$/g, key)
                         .replace(/\$\$upperKey\$\$/g, upperKey);
                     classFunctionStr += `    ${arrayGetSetStr}${lineBreak}`;
                 } else {
-                    constructorStr += `this[${key}] = null;${lineBreak}        `;
-                    symbolStr += `const ${key} = Symbol("${key}");${lineBreak}`;
+                    constructorStr += `this.${getPrivateSuffixToUse()}${key} = null;${lineBreak}        `;
                     const {getter, setter} = generateGetterSetter(key, value);
                     classFunctionStr += `${lineBreak}`;
                     classFunctionStr += `    ${getter}${lineBreak}`;
                     classFunctionStr += `    ${setter}${lineBreak}`;
                 }
             }
-            fieldsStr += fieldsStr === "" ? `${key}` : `, ${key}`;
+            fields.push(key);
         };
         if (addLineBreak) {
             importsStr += lineBreak;
         }
     }
+    const fieldsStr = fields.join(", ");
     classData = classData
         .replace("$$imports$$", importsStr)
         .replace("$$constructor$$", constructorStr)
         .replace("$$classFunction$$", classFunctionStr)
         .replace("$$fieldsDestructuring$$", fieldsStr !== "" ? `const {${fieldsStr}} = this;`: "")
         .replace("$$fields$$", fieldsStr)
-        .replace("$$symbols$$", symbolStr)
         .replace(/^\s*$[\r\n]{1,}/gm, "\n");
         
     const filePath = `${dir}/${upperName}.js`;
@@ -109,10 +110,12 @@ function parseLevel(dir, name, level) {
 
 function generateGetterSetter(key, value) {
     const getter = templateGet
+        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
         .replace(/\$\$key\$\$/g, key)
         .replace(/\$\$defaultValue\$\$/g, defaultValueToUse);
 
     const setter = templateSet
+        .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
         .replace(/\$\$key\$\$/g, key)
         .replace(/\$\$value\$\$/g, getSetterParser(value)());
     return {getter, setter};
@@ -123,11 +126,11 @@ function getSetterParser(value) {
         case "string":
             return () => `_value && String(_value)`
         case "integer":
-            return () => `_value && Number.parseInt(_value)`
+            return () => `_.isFinite(Number.parseInt(_value, 10)) ? Number.parseInt(_value, 10) : null`
         case "number":
-            return () => `_value && Number.parseFloat(_value)`
+            return () => `_.isFinite(Number(_value)) ? Number(_value) : null`
         case "boolean":
-            return () => `_value === "true" || _value === true`
+            return () => `_.isNil(_value) ? _value : (_value === "true" || _value === true)`
         default :
             return () => `_value`
     }
@@ -149,8 +152,9 @@ function createIndex(dir) {
     });
 }
 
-module.exports = (jsonPath, defaultValue) => {
+module.exports = (jsonPath, {defaultValue, privateSuffix}) => {
     defaultValueToUse = defaultValue;
+    privateSuffixToUse = privateSuffix;
     const pathInfo = path.parse(jsonPath);
     if (pathInfo.ext === ".json") {
         const dir = `${pathInfo.dir}/${pathInfo.name}`;

@@ -1,6 +1,6 @@
 {
   "name": "json-to-es2015",
-  "version": "1.0.18",
+  "version": "1.0.26",
   "bin": {
     "json-to-es2015": "./cli"
   },
@@ -23,6 +23,6 @@
     "babel-preset-env": "^1.4.0"
   },
   "peerDependencies": {
-    "lodash": "^4.17.5"
+    "lodash": "4.17.5"
   }
 }
