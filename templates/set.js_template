@@ -1,3 +1,3 @@
 set $$key$$(_value) {
-        this.$$privateSuffix$$$$key$$ = $$value$$;
+        $$tempConst$$this.$$privateSuffix$$$$key$$ = $$value$$;
     }

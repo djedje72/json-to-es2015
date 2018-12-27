@@ -117,7 +117,8 @@ function generateGetterSetter(key, value) {
     const setter = templateSet
         .replace(/\$\$privateSuffix\$\$/g, getPrivateSuffixToUse())
         .replace(/\$\$key\$\$/g, key)
-        .replace(/\$\$value\$\$/g, getSetterParser(value)());
+        .replace(/\$\$value\$\$/g, getSetterParser(value))
+        .replace(/\$\$tempConst\$\$/g, getTempConstIfNecessary(value));
     return {getter, setter};
 }
 
@@ -126,13 +127,22 @@ function getSetterParser(value) {
         case "string":
             return () => `_value && String(_value)`
         case "integer":
-            return () => `_.isFinite(Number.parseInt(_value, 10)) ? Number.parseInt(_value, 10) : null`
+            return () => `_.isFinite(parsedValue) ? parsedValue : null`
         case "number":
             return () => `_.isFinite(Number(_value)) ? Number(_value) : null`
         case "boolean":
             return () => `_.isNil(_value) ? _value : (_value === "true" || _value === true)`
         default :
             return () => `_value`
+    }
+}
+
+function getTempConstIfNecessary(value) {
+    switch(value && value.toLowerCase()) {
+        case "number":
+            return () => `const parsedValue = Number.parseInt(_value, 10);${lineBreak}`
+        default :
+            return () => ``
     }
 }
 
