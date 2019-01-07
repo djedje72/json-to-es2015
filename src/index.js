@@ -129,7 +129,7 @@ function getSetterParser(value) {
         case "integer":
             return () => `_.isFinite(parsedValue) ? parsedValue : null`
         case "number":
-            return () => `_.isFinite(Number(_value)) ? Number(_value) : null`
+            return () => `_.isFinite(parsedValue) ? parsedValue : null`
         case "boolean":
             return () => `_.isNil(_value) ? _value : (_value === "true" || _value === true)`
         default :
@@ -139,8 +139,10 @@ function getSetterParser(value) {
 
 function getTempConstIfNecessary(value) {
     switch(value && value.toLowerCase()) {
-        case "number":
+        case "integer":
             return () => `const parsedValue = Number.parseInt(_value, 10);${lineBreak}`
+        case "number":
+            return () => `const parsedValue = Number(_value);${lineBreak}`
         default :
             return () => ``
     }
