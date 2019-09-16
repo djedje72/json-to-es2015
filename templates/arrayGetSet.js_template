@@ -3,6 +3,6 @@ get $$key$$() {
     }
     set $$key$$(_values) {
         this.$$privateSuffix$$$$key$$ = _values instanceof Array ? _values.map(
-            (_value) => ((_value && _value instanceof Object) ? _.merge(new $$upperKey$$Value(), _value) : _value)
+            _value => ((_value && _value instanceof Object) ? _.merge(new $$upperKey$$(), _value) : _value)
         ) : [];
     }
