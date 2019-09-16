@@ -111,8 +111,8 @@ class Parser {
                         arrayGetSetStr = templateArrayGetSetSimple;
                     } else {
                         arrayGetSetStr = templateArrayGetSet;
+                        imports.add(arrayValue);
                     }
-                    imports.add(arrayValue);
                     constructorStr += `this.${this.privateSuffixToUse}${key} = [];${this._lineBreak}        `;
                     arrayGetSetStr = arrayGetSetStr
                         .replace(/\$\$privateSuffix\$\$/g, this.privateSuffixToUse)
