@@ -1,7 +1,7 @@
 const fs = require("fs");
 const chalk = require("chalk");
 
-const {templateGet, templateClass, templateArrayGetSet, templateSet, templateIndex} = require("./templates");
+const {templateGet, templateClass, templateArrayGetSet, templateArrayGetSetSimple, templateSet, templateIndex} = require("./templates");
 const parseSchema = require("./parseSchema");
 
 const upperFirst = str => str.charAt(0).toUpperCase() + str.slice(1);
@@ -89,6 +89,8 @@ class Parser {
         return {getter, setter};
     };
 
+    _isUpper = (str) => str === (str || "").toUpperCase();
+
     _writeClass = (name, props) => {
         const fields = [];
         let imports = new Set();
@@ -104,9 +106,15 @@ class Parser {
                 if (this._isArray(value)) {
                     useLodash = true;
                     let arrayValue = value.replace(/[\[\]#]/g, "");
+                    let arrayGetSetStr;
+                    if (!this._isUpper(arrayValue[0])) {
+                        arrayGetSetStr = templateArrayGetSetSimple;
+                    } else {
+                        arrayGetSetStr = templateArrayGetSet;
+                    }
                     imports.add(arrayValue);
                     constructorStr += `this.${this.privateSuffixToUse}${key} = [];${this._lineBreak}        `;
-                    const arrayGetSetStr = templateArrayGetSet
+                    arrayGetSetStr = arrayGetSetStr
                         .replace(/\$\$privateSuffix\$\$/g, this.privateSuffixToUse)
                         .replace(/\$\$key\$\$/g, key)
                         .replace(/\$\$upperKey\$\$/g, arrayValue);

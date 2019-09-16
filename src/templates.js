@@ -7,5 +7,6 @@ module.exports = {
     "templateGet": fs.readFileSync(`${templatesPath}/get.js_template`, {"encoding": "utf-8"}),
     "templateSet": fs.readFileSync(`${templatesPath}/set.js_template`, {"encoding": "utf-8"}),
     "templateArrayGetSet": fs.readFileSync(`${templatesPath}/arrayGetSet.js_template`, {"encoding": "utf-8"}),
+    "templateArrayGetSetSimple": fs.readFileSync(`${templatesPath}/arrayGetSet_simple.js_template`, {"encoding": "utf-8"}),
     "templateIndex": fs.readFileSync(`${templatesPath}/index.js_template`, {"encoding": "utf-8"})
 };

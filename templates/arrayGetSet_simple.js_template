@@ -1,0 +1,6 @@
+get $$key$$() {
+        return this.$$privateSuffix$$$$key$$;
+    }
+    set $$key$$(_values) {
+        this.$$privateSuffix$$$$key$$ = _values || [];
+    }
