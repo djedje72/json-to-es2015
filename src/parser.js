@@ -104,13 +104,13 @@ class Parser {
                 constructorStr += `this.${key} = new ${objectValue}();${this._lineBreak}        `;
             } else {
                 if (this._isArray(value)) {
-                    useLodash = true;
                     let arrayValue = value.replace(/[\[\]#]/g, "");
                     let arrayGetSetStr;
                     if (!this._isUpper(arrayValue[0])) {
                         arrayGetSetStr = templateArrayGetSetSimple;
                     } else {
                         arrayGetSetStr = templateArrayGetSet;
+                        useLodash = true;
                         imports.add(arrayValue);
                     }
                     constructorStr += `this.${this.privateSuffixToUse}${key} = [];${this._lineBreak}        `;
