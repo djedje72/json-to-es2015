@@ -39,7 +39,7 @@ class Parser {
         if ($ref) {
             value = `${this._objectPrefix}${getRefClass($ref)}`;
         } else {
-            value = type.find(t => t !== "null");
+            value = this._isArray(type) ? type.find(t => t !== "null") : type;
             if (value === "array") {
                 value = `[${this._getClazz(items)}]`;
             }
@@ -48,7 +48,8 @@ class Parser {
     };
 
     _isObject = value => value[0] === this._objectPrefix;
-    _isArray = value => value[0] === "[";
+    _isStringArray = value => value[0] === "[";
+    _isArray = value => Array.isArray(value);
 
     _getSetterParser = (value) => {
         switch(value && value.toLowerCase()) {
@@ -103,7 +104,7 @@ class Parser {
                 imports.add(objectValue);
                 constructorStr += `this.${key} = new ${objectValue}();${this._lineBreak}        `;
             } else {
-                if (this._isArray(value)) {
+                if (this._isStringArray(value)) {
                     let arrayValue = value.replace(/[\[\]#]/g, "");
                     let arrayGetSetStr;
                     if (!this._isUpper(arrayValue[0])) {
